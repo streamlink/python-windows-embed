@@ -1,0 +1,107 @@
+name: Build
+
+on:
+  push: {}
+  pull_request: {}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cpython: "3.10"
+            arch: x64
+            os: windows-2022
+          - cpython: "3.10"
+            arch: x86
+            os: windows-2022
+          - cpython: "3.8"
+            arch: x64
+            os: windows-2016
+          - cpython: "3.8"
+            arch: x86
+            os: windows-2016
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Set up python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+      - name: Check out cpython
+        uses: actions/checkout@v3
+        with:
+          repository: python/cpython
+          ref: ${{ matrix.cpython }}
+          fetch-depth: 0
+          path: cpython
+      - name: Fetch tags
+        shell: bash
+        working-directory: ./cpython
+        run: git fetch --tags --force
+      - name: Get vars
+        id: vars
+        shell: pwsh
+        working-directory: .\cpython
+        run: |
+          $d = (.\PCbuild\build.bat -V) | %{ if($_ -match '\s+(\w+):\s*(.+)\s*$') { @{$Matches[1] = $Matches[2];} }};
+          echo ("::set-output name=python_version::" + $d.PythonVersion)
+          echo ("::set-output name=git_version::" + (git describe --tags))
+#      - name: Get external libs (sources)
+#        shell: pwsh
+#        run: |
+#          .\cpython\PCbuild\get_externals.bat --no-tkinter --tkinter-src --no-openssl --openssl-src --no-libffi --libffi-src
+#      # prepare_tcltk.bat (only build for the arch we're interested in)
+#      - name: Build Tcl/Tk
+#        shell: pwsh
+#        run: |
+#          $env:MSBUILD = (cmd /v:on /c "call .\cpython\PCbuild\find_msbuild.bat >nul && echo !MSBUILD!")
+#          "& $env:MSBUILD .\cpython\PCbuild\tcl.vcxproj /p:Configuration=Release /p:Platform=$platform" | Invoke-Expression
+#          "& $env:MSBUILD .\cpython\PCbuild\tk.vcxproj /p:Configuration=Release /p:Platform=$platform" | Invoke-Expression
+#          "& $env:MSBUILD .\cpython\PCbuild\tix.vcxproj /p:Configuration=Release /p:Platform=$platform" | Invoke-Expression
+#      # prepare_ssl.bat (only build for the arch we're interested in)
+#      - name: Build OpenSSL
+#        shell: pwsh
+#        run: |
+#          $platform = If ("${{ matrix.arch }}" -eq "x86") {"Win32"} else {"${{ matrix.arch }}"}
+#          $env:MSBUILD = (cmd /v:on /c "call .\cpython\PCbuild\find_msbuild.bat >nul && echo !MSBUILD!")
+#          $env:PYTHON = (Get-Command python.exe).Path
+#          $env:PERL = (Get-Command perl.exe).Path
+#          "& $env:MSBUILD .\cpython\PCbuild\openssl.vcxproj /p:Configuration=Release /p:Platform=$platform" | Invoke-Expression
+#      - uses: cygwin/cygwin-install-action@ad81540ad7c2726e17c08401fbeca6380cc7f463
+#        with:
+#          platform: x86_64
+#          packages: make,autoconf,automake,libtool,dejagnu
+#      # prepare_libffi.bat
+#      - name: Build libffi
+#        shell: pwsh
+#        run: |
+#          $env:LIBFFI_SOURCE = (Resolve-Path .\cpython\externals\libffi-*).Path
+#          $env:SH = "C:\cygwin\bin\sh.exe"
+#          .\cpython\PCbuild\prepare_libffi.bat -${{ matrix.arch }} -license
+      - name: Get external libs (pre-built binaries)
+        shell: pwsh
+        run: |
+          .\cpython\PCbuild\get_externals.bat
+      - name: Build
+        shell: pwsh
+        run: |
+          $platform = If ("${{ matrix.arch }}" -eq "x86") {"Win32"} else {"${{ matrix.arch }}"}
+          .\cpython\PCbuild\build.bat -v -c Release -p $platform
+      - name: Package
+        shell: pwsh
+        run: |
+          $platform = If ("${{ matrix.arch }}" -eq "x86") {"win32"} else {"amd64"}
+          & (".\cpython\PCbuild\" + $platform + "\python.exe") `
+            .\cpython\PC\layout `
+            -vv `
+            --source .\cpython `
+            --build .\cpython\PCbuild\$platform `
+            --arch $platform `
+            --temp .\temp `
+            --precompile `
+            --zip "python-${{ steps.vars.outputs.git_version }}-windows-${{ matrix.arch }}-embed.zip"
+      - uses: actions/upload-artifact@v2
+        with:
+          name: python-${{ steps.vars.outputs.git_version }}-windows-${{ matrix.arch }}-embed
+          path: ./*.zip
