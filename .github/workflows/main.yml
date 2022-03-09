@@ -18,10 +18,10 @@ jobs:
             os: windows-2022
           - cpython: "3.8"
             arch: x64
-            os: windows-2016
+            os: windows-2019
           - cpython: "3.8"
             arch: x86
-            os: windows-2016
+            os: windows-2019
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up python
