@@ -10,17 +10,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - cpython: "3.10"
-            arch: x64
+          - arch: x64
+            cpython_branch: "3.10"
+            cpython_commit: d8ba5c102c54a5f0944638df4b6cda689faba7fa
             os: windows-2022
-          - cpython: "3.10"
-            arch: x86
+          - arch: x86
+            cpython_branch: "3.10"
+            cpython_commit: d8ba5c102c54a5f0944638df4b6cda689faba7fa
             os: windows-2022
-          - cpython: "3.8"
-            arch: x64
+          - arch: x64
+            cpython_branch: "3.8"
+            cpython_commit: ccbc31ecf3a08ef626be9bbb099f0ce801142fc8
             os: windows-2019
-          - cpython: "3.8"
-            arch: x86
+          - arch: x86
+            cpython_branch: "3.8"
+            cpython_commit: ccbc31ecf3a08ef626be9bbb099f0ce801142fc8
             os: windows-2019
     runs-on: ${{ matrix.os }}
     steps:
@@ -28,37 +32,57 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: "3.10"
-      - name: Check out cpython
-        uses: actions/checkout@v3
-        with:
-          repository: python/cpython
-          ref: ${{ matrix.cpython }}
-          fetch-depth: 0
-          path: cpython
-      - name: Fetch tags
+
+      - name: Get cpython
         shell: bash
-        working-directory: ./cpython
-        run: git fetch --tags --force
+        run: |
+          git init cpython
+          git -C cpython remote add origin https://github.com/python/cpython.git
+          git -C cpython fetch \
+            --depth=1000 \
+            --progress \
+            origin \
+            '+refs/heads/${{ matrix.cpython_branch }}:refs/remotes/origin/${{ matrix.cpython_branch }}' \
+            '+refs/tags/v${{ matrix.cpython_branch }}.*:refs/tags/v${{ matrix.cpython_branch }}.*'
+          git -C cpython checkout '${{ matrix.cpython_commit }}'
+
       - name: Get vars
         id: vars
         shell: pwsh
-        working-directory: .\cpython
         run: |
-          $d = (.\PCbuild\build.bat -V) | %{ if($_ -match '\s+(\w+):\s*(.+)\s*$') { @{$Matches[1] = $Matches[2];} }};
+          $d = (.\cpython\PCbuild\build.bat -V) | %{ if($_ -match '\s+(\w+):\s*(.+)\s*$') { @{$Matches[1] = $Matches[2];} }};
           echo ("::set-output name=python_version::" + $d.PythonVersion)
-          echo ("::set-output name=git_version::" + (git describe --tags))
+          echo ("::set-output name=git_version::" + (git -C cpython describe --tags --long))
+
 #      - name: Get external libs (sources)
 #        shell: pwsh
 #        run: |
-#          .\cpython\PCbuild\get_externals.bat --no-tkinter --tkinter-src --no-openssl --openssl-src --no-libffi --libffi-src
+#          .\cpython\PCbuild\get_externals.bat `
+#            --no-tkinter `
+#            --tkinter-src `
+#            --no-openssl `
+#            --openssl-src `
+#            --no-libffi `
+#            --libffi-src
+#
 #      # prepare_tcltk.bat (only build for the arch we're interested in)
 #      - name: Build Tcl/Tk
 #        shell: pwsh
 #        run: |
 #          $env:MSBUILD = (cmd /v:on /c "call .\cpython\PCbuild\find_msbuild.bat >nul && echo !MSBUILD!")
-#          "& $env:MSBUILD .\cpython\PCbuild\tcl.vcxproj /p:Configuration=Release /p:Platform=$platform" | Invoke-Expression
-#          "& $env:MSBUILD .\cpython\PCbuild\tk.vcxproj /p:Configuration=Release /p:Platform=$platform" | Invoke-Expression
-#          "& $env:MSBUILD .\cpython\PCbuild\tix.vcxproj /p:Configuration=Release /p:Platform=$platform" | Invoke-Expression
+#          & $env:MSBUILD `
+#            .\cpython\PCbuild\tcl.vcxproj `
+#            /p:Configuration=Release `
+#            /p:Platform=$platform
+#          & $env:MSBUILD `
+#            .\cpython\PCbuild\tk.vcxproj `
+#            /p:Configuration=Release `
+#            /p:Platform=$platform
+#          & $env:MSBUILD `
+#            .\cpython\PCbuild\tix.vcxproj `
+#            /p:Configuration=Release `
+#            /p:Platform=$platform
+#
 #      # prepare_ssl.bat (only build for the arch we're interested in)
 #      - name: Build OpenSSL
 #        shell: pwsh
@@ -67,31 +91,38 @@ jobs:
 #          $env:MSBUILD = (cmd /v:on /c "call .\cpython\PCbuild\find_msbuild.bat >nul && echo !MSBUILD!")
 #          $env:PYTHON = (Get-Command python.exe).Path
 #          $env:PERL = (Get-Command perl.exe).Path
-#          "& $env:MSBUILD .\cpython\PCbuild\openssl.vcxproj /p:Configuration=Release /p:Platform=$platform" | Invoke-Expression
+#          & $env:MSBUILD `
+#            .\cpython\PCbuild\openssl.vcxproj `
+#            /p:Configuration=Release `
+#            /p:Platform=$platform
+#
+#      # prepare_libffi.bat
 #      - uses: cygwin/cygwin-install-action@ad81540ad7c2726e17c08401fbeca6380cc7f463
 #        with:
 #          platform: x86_64
 #          packages: make,autoconf,automake,libtool,dejagnu
-#      # prepare_libffi.bat
 #      - name: Build libffi
 #        shell: pwsh
 #        run: |
 #          $env:LIBFFI_SOURCE = (Resolve-Path .\cpython\externals\libffi-*).Path
 #          $env:SH = "C:\cygwin\bin\sh.exe"
 #          .\cpython\PCbuild\prepare_libffi.bat -${{ matrix.arch }} -license
+
       - name: Get external libs (pre-built binaries)
         shell: pwsh
         run: |
           .\cpython\PCbuild\get_externals.bat
+
       - name: Build
         shell: pwsh
         run: |
-          $platform = If ("${{ matrix.arch }}" -eq "x86") {"Win32"} else {"${{ matrix.arch }}"}
+          $platform = "${{ matrix.arch }}" -eq "x86" ? "Win32" : "${{ matrix.arch }}"
           .\cpython\PCbuild\build.bat -v -c Release -p $platform
+
       - name: Package
         shell: pwsh
         run: |
-          $platform = If ("${{ matrix.arch }}" -eq "x86") {"win32"} else {"amd64"}
+          $platform = "${{ matrix.arch }}" -eq "x86" ? "win32" : "amd64"
           & (".\cpython\PCbuild\" + $platform + "\python.exe") `
             .\cpython\PC\layout `
             -vv `
