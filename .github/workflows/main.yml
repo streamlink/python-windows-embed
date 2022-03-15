@@ -132,7 +132,24 @@ jobs:
             --temp .\temp `
             --precompile `
             --zip "python-${{ steps.vars.outputs.git_version }}-windows-${{ matrix.arch }}-embed.zip"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: python-${{ steps.vars.outputs.git_version }}-windows-${{ matrix.arch }}-embed
           path: ./*.zip
+
+  deploy:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - run: mkdir dist
+      - uses: actions/download-artifact@v3
+        with:
+          path: ./dist
+      - run: ./deploy.sh ./dist/**/*.zip
+        env:
+          RELEASES_API_KEY: ${{ secrets.GITHUB_TOKEN }}
