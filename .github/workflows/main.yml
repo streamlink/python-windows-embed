@@ -131,6 +131,7 @@ jobs:
             --arch $platform `
             --temp .\temp `
             --precompile `
+            --zip-lib `
             --zip "python-${{ steps.vars.outputs.git_version }}-windows-${{ matrix.arch }}-embed.zip"
       - uses: actions/upload-artifact@v3
         with:
