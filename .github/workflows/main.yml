@@ -12,19 +12,19 @@ jobs:
         include:
           - arch: x64
             cpython_branch: "3.10"
-            cpython_commit: 6cc6b13308b3202270ea7ac0ee776762a66f6a2f
+            cpython_commit: aaaf5174241496afca7ce4d4584570190ff972fe
             os: windows-2022
           - arch: x86
             cpython_branch: "3.10"
-            cpython_commit: 6cc6b13308b3202270ea7ac0ee776762a66f6a2f
+            cpython_commit: aaaf5174241496afca7ce4d4584570190ff972fe
             os: windows-2022
           - arch: x64
             cpython_branch: "3.8"
-            cpython_commit: f43e7678a1443b2583fc9bfba091b8ca7e38f075
+            cpython_commit: 44adf8a80a6e27a394094c99ec0fba8e7124bd7e
             os: windows-2019
           - arch: x86
             cpython_branch: "3.8"
-            cpython_commit: f43e7678a1443b2583fc9bfba091b8ca7e38f075
+            cpython_commit: 44adf8a80a6e27a394094c99ec0fba8e7124bd7e
             os: windows-2019
     runs-on: ${{ matrix.os }}
     steps:
