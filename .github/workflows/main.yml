@@ -51,8 +51,8 @@ jobs:
         shell: pwsh
         run: |
           $d = (.\cpython\PCbuild\build.bat -V) | %{ if($_ -match '\s+(\w+):\s*(.+)\s*$') { @{$Matches[1] = $Matches[2];} }};
-          echo ("::set-output name=python_version::" + $d.PythonVersion)
-          echo ("::set-output name=git_version::" + (git -C cpython describe --tags --long))
+          echo ("python_version=" + $d.PythonVersion) >> $env:GITHUB_OUTPUT
+          echo ("git_version=" + (git -C cpython describe --tags --long)) >> $env:GITHUB_OUTPUT
 
 #      - name: Get external libs (sources)
 #        shell: pwsh
