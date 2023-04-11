@@ -12,11 +12,11 @@ jobs:
         include:
           - arch: x64
             cpython_branch: "3.11"
-            cpython_commit: 878ead1ac1651965126322c1b3d124faf5484dc6
+            cpython_commit: f3909b8bc83675b7ab093dbc558e677558d8e718
             os: windows-2022
           - arch: x86
             cpython_branch: "3.11"
-            cpython_commit: 878ead1ac1651965126322c1b3d124faf5484dc6
+            cpython_commit: f3909b8bc83675b7ab093dbc558e677558d8e718
             os: windows-2022
           - arch: x64
             cpython_branch: "3.8"
