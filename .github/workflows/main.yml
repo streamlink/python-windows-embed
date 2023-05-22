@@ -20,11 +20,11 @@ jobs:
             os: windows-2022
           - arch: x64
             cpython_branch: "3.8"
-            cpython_commit: 1e3d2d52109c9d82ba307116e912d16bb4b0dbb7
+            cpython_commit: 9f89c471fb152fd031791f3c598ceba93d91dcf0
             os: windows-2019
           - arch: x86
             cpython_branch: "3.8"
-            cpython_commit: 1e3d2d52109c9d82ba307116e912d16bb4b0dbb7
+            cpython_commit: 9f89c471fb152fd031791f3c598ceba93d91dcf0
             os: windows-2019
     runs-on: ${{ matrix.os }}
     steps:
