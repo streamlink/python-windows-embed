@@ -19,6 +19,14 @@ jobs:
             cpython_commit: 0fb18b02c8ad56299d6a2910be0bab8ad601ef24
             os: windows-2022
           - arch: x64
+            cpython_branch: "3.11"
+            cpython_commit: 8b6ee5ba3bd08368ba3c763cea28ce1464a88e62
+            os: windows-2022
+          - arch: x86
+            cpython_branch: "3.11"
+            cpython_commit: 8b6ee5ba3bd08368ba3c763cea28ce1464a88e62
+            os: windows-2022
+          - arch: x64
             cpython_branch: "3.8"
             cpython_commit: a56dcaefd66fc2fdd16ce21be9fc95fa40037c21
             os: windows-2019
