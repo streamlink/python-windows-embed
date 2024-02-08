@@ -134,7 +134,7 @@ jobs:
             --include-underpth `
             --zip-lib `
             --zip "python-${{ steps.vars.outputs.git_version }}-windows-${{ matrix.arch }}-embed.zip"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: python-${{ steps.vars.outputs.git_version }}-windows-${{ matrix.arch }}-embed
           path: ./*.zip
@@ -149,7 +149,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: mkdir dist
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           path: ./dist
       - run: ./deploy.sh ./dist/**/*.zip
