@@ -10,13 +10,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - arch: x64
-            cpython_branch: "3.12"
+          - cpython_branch: "3.12"
             cpython_commit: 0b05ead877f909b7efe712db758012d9dbece7ce
-            os: windows-2022
-          - arch: x86
-            cpython_branch: "3.12"
-            cpython_commit: 0b05ead877f909b7efe712db758012d9dbece7ce
+            arch: x64
+            platform: amd64
+            build_args: ""
             os: windows-2022
     runs-on: ${{ matrix.os }}
     steps:
@@ -108,19 +106,17 @@ jobs:
       - name: Build
         shell: pwsh
         run: |
-          $platform = "${{ matrix.arch }}" -eq "x86" ? "Win32" : "${{ matrix.arch }}"
-          .\cpython\PCbuild\build.bat -v -c Release -p $platform
+          .\cpython\PCbuild\build.bat -v -c Release -p ${{ matrix.arch }} ${{ matrix.build_args }}
 
       - name: Package
         shell: pwsh
         run: |
-          $platform = "${{ matrix.arch }}" -eq "x86" ? "win32" : "amd64"
-          & (".\cpython\PCbuild\" + $platform + "\python.exe") `
+          .\cpython\PCbuild\${{ matrix.platform }}\python.exe `
             .\cpython\PC\layout `
             -vv `
             --source .\cpython `
-            --build .\cpython\PCbuild\$platform `
-            --arch $platform `
+            --build .\cpython\PCbuild\${{ matrix.platform }} `
+            --arch ${{ matrix.platform }} `
             --temp .\temp `
             --precompile `
             --include-underpth `
