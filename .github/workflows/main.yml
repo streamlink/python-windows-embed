@@ -10,12 +10,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - cpython_branch: "3.12"
-            cpython_commit: 2dc476bcb9142cd25d7e1d52392b73a3dcdf1756
-            arch: x64
-            platform: amd64
-            build_args: ""
-            os: windows-2022
           - cpython_branch: "3.13"
             cpython_commit: 067145177975eadd61a0c907d0d177f7b6a5a3de
             arch: x64
