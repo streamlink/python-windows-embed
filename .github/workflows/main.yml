@@ -11,7 +11,7 @@ jobs:
       matrix:
         include:
           - cpython_branch: "3.13"
-            cpython_commit: 4f8bb3947cfbc20f970ff9d9531e1132a9e95396
+            cpython_commit: 6280bb547840b609feedb78887c6491af75548e8
             arch: x64
             platform: amd64
             build_args: ""
