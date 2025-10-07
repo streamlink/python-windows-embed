@@ -16,6 +16,12 @@ jobs:
             platform: amd64
             build_args: ""
             os: windows-2022
+          - cpython_branch: "3.14"
+            cpython_commit: ebf955df7a89ed0c7968f79faec1de49f61ed7cb
+            arch: x64
+            platform: amd64
+            build_args: ""
+            os: windows-2022
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up python
