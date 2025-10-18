@@ -11,13 +11,13 @@ jobs:
       matrix:
         include:
           - cpython_branch: "3.13"
-            cpython_commit: a15ae614deb58f78f9f4aa11ed18a0afc6a9df7d
+            cpython_commit: 8183fa5e3f78ca6ab862de7fb8b14f3d929421e0
             arch: x64
             platform: amd64
             build_args: ""
             os: windows-2022
           - cpython_branch: "3.14"
-            cpython_commit: ebf955df7a89ed0c7968f79faec1de49f61ed7cb
+            cpython_commit: 8183fa5e3f78ca6ab862de7fb8b14f3d929421e0
             arch: x64
             platform: amd64
             build_args: ""
