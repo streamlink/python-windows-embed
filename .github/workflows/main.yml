@@ -124,6 +124,7 @@ jobs:
             --zip "python-${{ steps.vars.outputs.git_version }}-windows-${{ matrix.arch }}-embed.zip"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
+          archive: false
           name: python-${{ steps.vars.outputs.git_version }}-windows-${{ matrix.arch }}-embed
           path: ./*.zip
 
@@ -139,7 +140,9 @@ jobs:
       - run: mkdir dist
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
+          skip-decompress: true
+          merge-multiple: true
           path: ./dist
-      - run: ./deploy.sh ./dist/**/*.zip
+      - run: ./deploy.sh ./dist/*.zip
         env:
           RELEASES_API_KEY: ${{ secrets.GITHUB_TOKEN }}
