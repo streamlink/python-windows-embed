@@ -39,20 +39,13 @@ CURL_OPTIONS=(
 GH_API="https://api.github.com/repos/${GITHUB_REPOSITORY}"
 GH_UPLOAD="https://uploads.github.com/repos/${GITHUB_REPOSITORY}"
 
-get_release_id() {
-  curl -fsSL \
-    -X GET \
-    "${CURL_OPTIONS[@]}" \
-    "${GH_API}/releases/tags/${TAG}" \
-    | jq -re ".id"
-}
-
 create_release() {
   local data
   data="$(jq -cnR \
     --arg tag_name "${TAG}" \
     --arg name "${GITHUB_REPOSITORY} ${TAG}" \
     '{
+      "draft": true,
       "tag_name": $tag_name,
       "name": $name,
       "body": ""
@@ -84,15 +77,20 @@ upload_assets() {
   done
 }
 
-deploy() {
-  log "Getting release ID for tag ${TAG}"
-  local release_id
-  release_id="$(get_release_id 2>/dev/null || true)"
+publish_release() {
+  local release_id="${1}"
+  curl -fsSL \
+    -X PATCH \
+    "${CURL_OPTIONS[@]}" \
+    -d '{"draft":false}' \
+    "${GH_API}/releases/${release_id}"
+}
 
-  if [[ -z "${release_id}" ]]; then
-    log "Creating new release for tag ${TAG}"
-    release_id="$(create_release)"
-  fi
+deploy() {
+  local release_id
+
+  log "Creating new draft release for tag ${TAG}"
+  release_id="$(create_release)"
 
   if [[ -z "${release_id}" ]]; then
     err "Missing release ID"
@@ -100,6 +98,9 @@ deploy() {
 
   log "Uploading assets to release ${release_id}"
   upload_assets "${release_id}"
+
+  log "Publishing release ${release_id}"
+  publish_release "${release_id}"
 
   log "Done"
 }
